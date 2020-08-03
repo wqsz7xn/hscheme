@@ -1,5 +1,6 @@
 module Main where
 
+import qualified Scheme as S (main)
+
 main :: IO ()
-main = do
-  putStrLn "hello world"
+main = S.main
