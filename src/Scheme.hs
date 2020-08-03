@@ -9,6 +9,7 @@ data LispVal = Atom String
              | Number Integer
              | String String
              | Bool Bool
+             deriving (Eq, Show)
 
 parseString :: Parser LispVal
 parseString = do
@@ -25,28 +26,34 @@ parseAtom = do
   return $ case atom of
     "#t" -> Bool True
     "#f" -> Bool False
+    _    -> Atom atom
+
+parseNumber :: Parser LispVal
+parseNumber = Number . read <$> many1 digit
+
+parseNumber' :: Parser LispVal
+parseNumber' = do
+  xs <- many1 digit
+  return $ (Number . read) xs
+
+parseNumber'' :: Parser LispVal
+parseNumber'' = many1 digit >>= (\xs -> return $ (Number . read) xs)
+
+parseExpr :: Parser LispVal
+parseExpr = parseAtom <|> parseString <|> parseNumber
 
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
 
 readExpr :: String -> String
-readExpr input = case parse (spaces >> symbol) "?" input of
+readExpr input = case parse parseExpr "?" input of
   Left err -> "No match " <> show err
-  Right val -> "Found value " 
+  Right val -> "Found value: " <> show val
 
 spaces :: Parser ()
 spaces = skipMany1 space
 
 main :: IO ()
 main = do
-  args <- getArgs
-  putStrLn $ "Hello, " <> (args !! 0) <> " " <> (args !! 1)
-  putStrLn $ show (read "123" :: Int )
-  line <- getLine
-  putStrLn $ "Hello, " <> line
-  main'
-
-main' :: IO ()
-main' = do
   (expr:_) <- getArgs
   putStrLn $ readExpr expr
